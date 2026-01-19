@@ -3,12 +3,26 @@ import json
 import os
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
+from functools import wraps
 import io
 
 app = Flask(__name__)
 CORS(app)
 
 DB_FILE = "data/database.sqlite"
+API_KEY = ""
+
+def require_api_key(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        header_key = request.headers.get('X-API-KEY')
+        args_key = request.args.get('key')
+
+        if header_key == API_KEY or args_key == API_KEY or API_KEY == "":
+            return f(*args, **kwargs)
+        else:
+            return jsonify({"error": "Unauthorized: Invalid or missing API Key"}), 401
+    return decorated_function
 
 def get_db_connection():
     os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
@@ -32,10 +46,10 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Initialize on start
 init_db()
 
 @app.route("/add", methods=["POST"])
+@require_api_key
 def add_item():
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
@@ -72,6 +86,7 @@ def add_item():
     return jsonify({"message": "Item added successfully"}), 200
 
 @app.route("/upload-db", methods=["POST"])
+@require_api_key
 def upload_db():
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
@@ -107,6 +122,7 @@ def upload_db():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/download-db", methods=["GET"])
+@require_api_key
 def download_db():
     if not os.path.exists(DB_FILE):
         return jsonify({"error": "Database not initialized"}), 404

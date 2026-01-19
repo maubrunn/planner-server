@@ -1,1 +1,1 @@
-This is the server for the [planner-app](https://github.com/maubrunn/planner). It is a very simple python script that deploys a flask app to update and read a sqlite db.
+This is the server for the [planner-app](https://github.com/maubrunn/planner). It is a very simple python script that deploys a flask app to update and read a sqlite db. In order to use the AUTH you can add a password to the API_KEY variable in the app.py file.
